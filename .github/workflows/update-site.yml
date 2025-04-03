@@ -26,12 +26,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p docs  # MkDocs expects markdown files here
-          gh repo list YOUR_ORG --json name -q '.[].name' > repos.txt  # Get list of repos
+          gh repo list readme-hub-test --json name -q '.[].name' > repos.txt  # Get list of repos
 
           # Fetch the README for each repository and save them as markdown files in docs/
           while read repo; do
             echo "Fetching README from $repo..."
-            gh api repos/YOUR_ORG/$repo/readme --header "Accept: application/vnd.github.raw" > docs/$repo.md || echo "# $repo\nNo README found" > docs/$repo.md
+            gh api repos/readme-hub-test/$repo/readme --header "Accept: application/vnd.github.raw" > docs/$repo.md || echo "# $repo\nNo README found" > docs/$repo.md
           done < repos.txt
 
       - name: Build the site with MkDocs
