@@ -9,12 +9,10 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -26,24 +24,31 @@ jobs:
 
       - name: Install MkDocs and dependencies
         run: |
-          pip install mkdocs mkdocs-material requests
+          pip install mkdocs mkdocs-material requests jq
 
       - name: Fetch all repositories in the organization
         run: |
-          ORGANIZATION="your-organization"
+          ORGANIZATION="readme-hub-test" 
           REPOS_URL="https://api.github.com/orgs/$ORGANIZATION/repos?per_page=100"
           REPOS=$(curl -s $REPOS_URL | jq -r '.[].name')
 
-          # Create a temporary folder to store the README files
+          # Create docs/readmes directory and index.md
           mkdir -p docs/readmes
-          
-          # Fetch README files for each repo
+
+          # Start creating the index.md file
+          echo "# Organization Repositories" > docs/index.md
+          echo "Here are the README files from all the repositories in the organization:" >> docs/index.md
+          echo "" >> docs/index.md
+
+          # Loop through the repositories and fetch their README files
           for REPO in $REPOS; do
             README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
-            curl -s $README_URL -o docs/readmes/$REPO.md || echo "Failed to fetch README for $REPO"
+            echo "## $REPO" >> docs/index.md
+            curl -s $README_URL >> docs/index.md
+            echo "" >> docs/index.md
           done
 
-      - name: Generate MkDocs site
+      - name: Build the MkDocs site
         run: |
           mkdocs build
 
