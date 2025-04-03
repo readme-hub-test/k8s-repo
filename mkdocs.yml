@@ -1,0 +1,7 @@
+site_name: Organization READMEs
+nav:
+  - Home: index.md
+theme:
+  name: material  # You can change this to another theme
+plugins:
+  - search
