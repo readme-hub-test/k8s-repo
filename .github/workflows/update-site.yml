@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # Needed for pushing changes
+  contents: write  # Necessary for pushing changes to Pages
 
 jobs:
   build-and-deploy:
@@ -21,18 +21,23 @@ jobs:
         run: |
           pip install mkdocs mkdocs-material
 
-      - name: Fetch README files
+      - name: Fetch README files dynamically
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p docs
-          gh repo list readme-hub-test --json name -q '.[].name' > repos.txt
+          mkdir -p docs  # MkDocs expects markdown files here
+          gh repo list YOUR_ORG --json name -q '.[].name' > repos.txt  # Get list of repos
 
+          # Fetch the README for each repository and save them as markdown files in docs/
           while read repo; do
             echo "Fetching README from $repo..."
-            gh api repos/readme-hub-test/$repo/readme --header "Accept: application/vnd.github.raw" > docs/$repo.md || echo "# $repo\nNo README found" > docs/$repo.md
+            gh api repos/YOUR_ORG/$repo/readme --header "Accept: application/vnd.github.raw" > docs/$repo.md || echo "# $repo\nNo README found" > docs/$repo.md
           done < repos.txt
+
+      - name: Build the site with MkDocs
+        run: |
+          mkdocs build --site-dir _site  # Build the static site and output it to _site/
 
       - name: Deploy to GitHub Pages
         run: |
-          mkdocs gh-deploy --force
+          mkdocs gh-deploy --force  # Deploy to GitHub Pages
