@@ -1,0 +1,38 @@
+name: Deploy MkDocs Site
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write  # Needed for pushing changes
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python and MkDocs
+        run: |
+          pip install mkdocs mkdocs-material
+
+      - name: Fetch README files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p docs
+          gh repo list readme-hub-test --json name -q '.[].name' > repos.txt
+
+          while read repo; do
+            echo "Fetching README from $repo..."
+            gh api repos/readme-hub-test/$repo/readme --header "Accept: application/vnd.github.raw" > docs/$repo.md || echo "# $repo\nNo README found" > docs/$repo.md
+          done < repos.txt
+
+      - name: Deploy to GitHub Pages
+        run: |
+          mkdocs gh-deploy --force
