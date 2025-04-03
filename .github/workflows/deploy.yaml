@@ -1,42 +1,52 @@
-name: Deploy MkDocs site
+name: Deploy MkDocs GitHub Pages
 
 on:
   push:
     branches:
       - main
-
-permissions:
-  contents: write
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        pip install mkdocs mkdocs-git-revision-date-localized-plugin requests
+      - name: Install MkDocs and dependencies
+        run: |
+          pip install mkdocs mkdocs-material requests
 
-    - name: Fetch README files
-      run: |
-        python fetch_readmes.py
+      - name: Fetch all repositories in the organization
+        run: |
+          ORGANIZATION="your-organization"
+          REPOS_URL="https://api.github.com/orgs/$ORGANIZATION/repos?per_page=100"
+          REPOS=$(curl -s $REPOS_URL | jq -r '.[].name')
 
-    - name: Build MkDocs site
-      run: |
-        mkdocs build
+          # Create a temporary folder to store the README files
+          mkdir -p docs/readmes
+          
+          # Fetch README files for each repo
+          for REPO in $REPOS; do
+            README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
+            curl -s $README_URL -o docs/readmes/$REPO.md || echo "Failed to fetch README for $REPO"
+          done
 
-    - name: Deploy to GitHub Pages
-      run: |
-        mkdocs gh-deploy --force
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate MkDocs site
+        run: |
+          mkdocs build
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: site
+          clean: true

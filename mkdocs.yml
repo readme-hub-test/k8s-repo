@@ -1,5 +1,9 @@
-site_name: "Organization README Viewer"
-plugins:
-  - git-revision-date-localized
-nav:
-  - Home: index.md
+site_name: Organization README Files
+site_url: https://github.com/readme-hub-test
+
+theme:
+  name: material
+
+markdown_extensions:
+  - toc:
+      permalink: true
