@@ -8,7 +8,7 @@ on:
     branches:
       - main
   workflow_dispatch:
-  
+
 permissions:
   contents: write
 
@@ -31,24 +31,29 @@ jobs:
 
       - name: Fetch all repositories in the organization
         run: |
-          ORGANIZATION="readme-hub-test" 
+          ORGANIZATION="readme-hub-test"  # Use your organization name here
           REPOS_URL="https://api.github.com/orgs/$ORGANIZATION/repos?per_page=100"
           REPOS=$(curl -s $REPOS_URL | jq -r '.[].name')
 
           # Create docs/readmes directory and index.md
           mkdir -p docs/readmes
 
-          # Start creating the index.md file
+          # Start creating the index.md file with links to each repo page
           echo "# Organization Repositories" > docs/index.md
           echo "Here are the README files from all the repositories in the organization:" >> docs/index.md
           echo "" >> docs/index.md
 
-          # Loop through the repositories and fetch their README files
+          # Loop through the repositories and create a page for each repo
           for REPO in $REPOS; do
+            REPO_FILE="docs/$REPO.md"  # Create a page for the repository
+
+            # Write the README content to the new page
             README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
-            echo "## $REPO" >> docs/index.md
-            curl -s $README_URL >> docs/index.md
-            echo "" >> docs/index.md
+            echo "# $REPO" > $REPO_FILE
+            curl -s $README_URL >> $REPO_FILE
+
+            # Add a link to the repository's page in index.md
+            echo "- [$REPO](/$REPO.md)" >> docs/index.md
           done
 
       - name: Build the MkDocs site
