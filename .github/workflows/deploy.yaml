@@ -1,0 +1,37 @@
+ name: Deploy MkDocs site
+
+ on:
+   push:
+     branches:
+       - main
+
+ jobs:
+   build-deploy:
+     runs-on: ubuntu-latest
+
+     steps:
+     - name: Checkout code
+       uses: actions/checkout@v2
+
+     - name: Set up Python
+       uses: actions/setup-python@v2
+       with:
+         python-version: '3.x'
+
+     - name: Install dependencies
+       run: |
+         pip install mkdocs mkdocs-git-revision-date-localized-plugin
+
+     - name: Fetch README files
+       run: |
+         python fetch_readmes.py
+
+     - name: Build MkDocs site
+       run: |
+         mkdocs build
+
+     - name: Deploy to GitHub Pages
+       run: |
+         mkdocs gh-deploy --force
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
