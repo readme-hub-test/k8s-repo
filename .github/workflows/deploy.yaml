@@ -50,7 +50,7 @@ jobs:
           ADDITIONAL_FILES_NAV="  - Additional Markdown Files:\n"
       
           README_LINKS=""
-          ADDITIONAL_FILES_SECTION="\n## Additional Markdown Files\nThese are additional markdown files found in repositories:\n"
+          ADDITIONAL_FILES_SECTION="\n## Additional Markdown Files\nAdditional documentation files:\n"
       
           # Loop through repositories
           for REPO in $REPOS; do
