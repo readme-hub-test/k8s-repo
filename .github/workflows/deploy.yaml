@@ -34,27 +34,43 @@ jobs:
           ORGANIZATION="readme-hub-test"  # Use your organization name here
           REPOS_URL="https://api.github.com/orgs/$ORGANIZATION/repos?per_page=100"
           REPOS=$(curl -s $REPOS_URL | jq -r '.[].name')
-
-          # Create docs/readmes directory and index.md
-          mkdir -p docs/readmes
-
+      
+          # Create directories
+          mkdir -p docs/readmes docs/extra-files
+      
           # Start creating the index.md file with links to each repo page
           echo "# Organization Repositories" > docs/index.md
-          echo "Here are the README files from all the repositories in the organization:" >> docs/index.md
+          echo "Here are the README files and additional markdown files from all repositories in the organization:" >> docs/index.md
           echo "" >> docs/index.md
-
-          # Loop through the repositories and create a page for each repo
+      
+          # Loop through the repositories and process README + additional markdown files
           for REPO in $REPOS; do
-            REPO_FILE="docs/$REPO.md"  # Create a page for the repository
-
-            # Write the README content to the new page
+            REPO_FILE="docs/readmes/$REPO.md"
+      
+            # Fetch README.md
             README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
             echo "# $REPO" > $REPO_FILE
             curl -s $README_URL >> $REPO_FILE
-
-            # Add a link to the repository's page in index.md
-            echo "- [$REPO](/$REPO.md)" >> docs/index.md
+      
+            # Add link to index.md
+            echo "- [$REPO](readmes/$REPO.md)" >> docs/index.md
+      
+            # Fetch additional markdown files
+            FILES_URL="https://api.github.com/repos/$ORGANIZATION/$REPO/contents"
+            FILES=$(curl -s $FILES_URL | jq -r '.[] | select(.name | endswith(".md")) | .name')
+      
+            for FILE in $FILES; do
+              FILE_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/$FILE"
+              FILE_PATH="docs/extra-files/$REPO-$FILE"
+      
+              echo "# $FILE from $REPO" > $FILE_PATH
+              curl -s $FILE_URL >> $FILE_PATH
+      
+              # Add link to index.md
+              echo "  - [$FILE from $REPO](extra-files/$REPO-$FILE)" >> docs/index.md
+            done
           done
+
 
       - name: Build the MkDocs site
         run: |
