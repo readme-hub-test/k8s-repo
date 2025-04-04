@@ -88,6 +88,8 @@ jobs:
       
           # Generate mkdocs.yml dynamically
           echo "site_name: Organization Documentation" > mkdocs.yml
+          echo "theme:" >> mkdocs.yml
+          echo "  name: readthedocs" >> mkdocs.yml
           echo "nav:" >> mkdocs.yml
           echo -e "$README_NAV" >> mkdocs.yml
           echo -e "$ADDITIONAL_FILES_NAV" >> mkdocs.yml
