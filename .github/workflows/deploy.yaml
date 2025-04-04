@@ -38,34 +38,37 @@ jobs:
           # Define additional markdown files to include (path within repo)
           ADDITIONAL_FILES=("additional-documentation.md")  # Define additional files
       
-          # Create docs/readmes directory
+          # Create docs directory
           mkdir -p docs/readmes
       
-          # Start creating the index.md file with two sections
+          # Start creating index.md
           echo "# Organization Repositories" > docs/index.md
           echo "Here are the README files from all the repositories in the organization:" >> docs/index.md
           echo "" >> docs/index.md
       
+          README_NAV="  - Organization Repositories:\n    - Home: index.md\n"
+          ADDITIONAL_FILES_NAV="  - Additional Markdown Files:\n"
+      
           README_LINKS=""
+          ADDITIONAL_FILES_SECTION="\n## Additional Markdown Files\nThese are additional documentation files found in repositories:\n"
       
-          ADDITIONAL_FILES_SECTION="\n## Additional Markdown Files\nThese are additional markdown files found in repositories:\n"
-      
-          # Loop through the repositories and create a page for each repo
+          # Loop through repositories
           for REPO in $REPOS; do
-            REPO_FILE="docs/$REPO.md"  # Create a page for the repository
+            REPO_FILE="docs/$REPO.md"
       
-            # Write the README content to the new page
+            # Fetch README
             README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
             echo "# $REPO" > $REPO_FILE
             curl -s $README_URL >> $REPO_FILE
       
-            # Collect README links
+            # Add to navigation and index
+            README_NAV+="    - $REPO: $REPO.md\n"
             README_LINKS+="- [$REPO](/$REPO.md)\n"
       
             # Loop through additional markdown files
             for FILE in "${ADDITIONAL_FILES[@]}"; do
-              FILE_NAME=$(basename $FILE)  # Extract filename
-              DEST_FILE="docs/${REPO}_${FILE_NAME}"  # Unique file name in docs
+              FILE_NAME=$(basename $FILE)
+              DEST_FILE="docs/${REPO}_${FILE_NAME}"
       
               FILE_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/$FILE"
               HTTP_STATUS=$(curl -o /dev/null --silent --head --write-out '%{http_code}\n' $FILE_URL)
@@ -74,13 +77,21 @@ jobs:
                 echo "# $REPO - $FILE_NAME" > $DEST_FILE
                 curl -s $FILE_URL >> $DEST_FILE
                 ADDITIONAL_FILES_SECTION+="- [$REPO - $FILE_NAME](/${REPO}_${FILE_NAME})\n"
+                ADDITIONAL_FILES_NAV+="    - $REPO - $FILE_NAME: ${REPO}_${FILE_NAME}\n"
               fi
             done
           done
-
+      
           # Append sections to index.md
           echo -e "$README_LINKS" >> docs/index.md
           echo -e "$ADDITIONAL_FILES_SECTION" >> docs/index.md
+      
+          # Generate mkdocs.yml dynamically
+          echo "site_name: Organization Documentation" > mkdocs.yml
+          echo "nav:" >> mkdocs.yml
+          echo -e "$README_NAV" >> mkdocs.yml
+          echo -e "$ADDITIONAL_FILES_NAV" >> mkdocs.yml
+      
 
       - name: Build the MkDocs site
         run: |
