@@ -3,7 +3,7 @@ site_url: https://readme-hub-test.github.io/organization-readme-pages/
 
 
 theme:
-  name: material
+  name: readthedocs
 
 markdown_extensions:
   - toc:
