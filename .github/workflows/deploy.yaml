@@ -31,44 +31,42 @@ jobs:
 
       - name: Fetch all repositories in the organization
         run: |
-          ORGANIZATION="readme-hub-test"  # Use your organization name here
+          ORGANIZATION="readme-hub-test"  # Your organization name
           REPOS_URL="https://api.github.com/orgs/$ORGANIZATION/repos?per_page=100"
           REPOS=$(curl -s $REPOS_URL | jq -r '.[].name')
       
-          # Define additional markdown files to include (path within repo)
-          ADDITIONAL_FILES=("additional-documentation.md")  # Define additional files
+          # Define additional markdown files
+          ADDITIONAL_FILES=("additional-documentation.md")
       
-          # Create docs directory
-          mkdir -p docs/readmes
+          # Create necessary directories
+          mkdir -p docs/readmes docs/additional_files
       
-          # Start creating index.md
+          # Create the index.md file for READMEs
           echo "# Organization Repositories" > docs/index.md
-          echo "Here are the README files from all the repositories in the organization:" >> docs/index.md
+          echo "Here are the README files from all repositories:" >> docs/index.md
           echo "" >> docs/index.md
       
-          README_NAV="  - Organization Repositories:\n    - Home: index.md\n"
-          ADDITIONAL_FILES_NAV="  - Additional Markdown Files:\n"
-      
-          README_LINKS=""
-          ADDITIONAL_FILES_SECTION="\n## Additional Markdown Files\nThese are additional documentation files found in repositories:\n"
+          # Create an additional markdown index
+          echo "# Additional Markdown Files" > docs/additional_files/index.md
+          echo "These are additional markdown files found in repositories:" >> docs/additional_files/index.md
+          echo "" >> docs/additional_files/index.md
       
           # Loop through repositories
           for REPO in $REPOS; do
-            REPO_FILE="docs/$REPO.md"
+            REPO_FILE="docs/readmes/$REPO.md"
       
-            # Fetch README
+            # Fetch README.md
             README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
             echo "# $REPO" > $REPO_FILE
             curl -s $README_URL >> $REPO_FILE
       
-            # Add to navigation and index
-            README_NAV+="    - $REPO: $REPO.md\n"
-            README_LINKS+="- [$REPO](/$REPO.md)\n"
+            # Add README link to index
+            echo "- [$REPO](readmes/$REPO.md)" >> docs/index.md
       
             # Loop through additional markdown files
             for FILE in "${ADDITIONAL_FILES[@]}"; do
               FILE_NAME=$(basename $FILE)
-              DEST_FILE="docs/${REPO}_${FILE_NAME}"
+              DEST_FILE="docs/additional_files/${REPO}_${FILE_NAME}"
       
               FILE_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/$FILE"
               HTTP_STATUS=$(curl -o /dev/null --silent --head --write-out '%{http_code}\n' $FILE_URL)
@@ -76,22 +74,11 @@ jobs:
               if [ "$HTTP_STATUS" -eq 200 ]; then
                 echo "# $REPO - $FILE_NAME" > $DEST_FILE
                 curl -s $FILE_URL >> $DEST_FILE
-                ADDITIONAL_FILES_SECTION+="- [$REPO - $FILE_NAME](/${REPO}_${FILE_NAME})\n"
-                ADDITIONAL_FILES_NAV+="    - $REPO - $FILE_NAME: ${REPO}_${FILE_NAME}\n"
+                echo "- [$REPO - $FILE_NAME](additional_files/${REPO}_${FILE_NAME})" >> docs/additional_files/index.md
               fi
             done
           done
-      
-          # Append sections to index.md
-          echo -e "$README_LINKS" >> docs/index.md
-          echo -e "$ADDITIONAL_FILES_SECTION" >> docs/index.md
-      
-          # Generate mkdocs.yml dynamically
-          echo "site_name: Organization Documentation" > mkdocs.yml
-          echo "nav:" >> mkdocs.yml
-          echo -e "$README_NAV" >> mkdocs.yml
-          echo -e "$ADDITIONAL_FILES_NAV" >> mkdocs.yml
-      
+   
 
       - name: Build the MkDocs site
         run: |
