@@ -38,13 +38,17 @@ jobs:
           # Define additional markdown files to include (path within repo)
           ADDITIONAL_FILES=("additional-documentation.md")  # Define additional files
       
-          # Create docs/readmes directory and index.md
+          # Create docs/readmes directory
           mkdir -p docs/readmes
       
-          # Start creating the index.md file with links to each repo page
+          # Start creating the index.md file with two sections
           echo "# Organization Repositories" > docs/index.md
-          echo "Here are the README files and additional markdown files from all repositories in the organization:" >> docs/index.md
+          echo "Here are the README files from all the repositories in the organization:" >> docs/index.md
           echo "" >> docs/index.md
+      
+          README_LINKS=""
+      
+          ADDITIONAL_FILES_SECTION="\n## Additional Markdown Files\nThese are additional markdown files found in repositories:\n"
       
           # Loop through the repositories and create a page for each repo
           for REPO in $REPOS; do
@@ -55,8 +59,8 @@ jobs:
             echo "# $REPO" > $REPO_FILE
             curl -s $README_URL >> $REPO_FILE
       
-            # Add a link to the repository's page in index.md
-            echo "- [$REPO](/$REPO.md)" >> docs/index.md
+            # Collect README links
+            README_LINKS+="- [$REPO](/$REPO.md)\n"
       
             # Loop through additional markdown files
             for FILE in "${ADDITIONAL_FILES[@]}"; do
@@ -69,11 +73,14 @@ jobs:
               if [ "$HTTP_STATUS" -eq 200 ]; then
                 echo "# $REPO - $FILE_NAME" > $DEST_FILE
                 curl -s $FILE_URL >> $DEST_FILE
-                echo "- [$REPO - $FILE_NAME](/${REPO}_${FILE_NAME})" >> docs/index.md
+                ADDITIONAL_FILES_SECTION+="- [$REPO - $FILE_NAME](/${REPO}_${FILE_NAME})\n"
               fi
             done
           done
 
+          # Append sections to index.md
+          echo -e "$README_LINKS" >> docs/index.md
+          echo -e "$ADDITIONAL_FILES_SECTION" >> docs/index.md
 
       - name: Build the MkDocs site
         run: |
