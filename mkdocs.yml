@@ -7,8 +7,3 @@ theme:
 markdown_extensions:
   - toc:
       permalink: true
-
-nav:
-  - Organization Repositories:
-      - Home: index.md
-  - Additional Markdown Files:
