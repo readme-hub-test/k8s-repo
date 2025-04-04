@@ -35,39 +35,42 @@ jobs:
           REPOS_URL="https://api.github.com/orgs/$ORGANIZATION/repos?per_page=100"
           REPOS=$(curl -s $REPOS_URL | jq -r '.[].name')
       
-          # Create directories
-          mkdir -p docs/readmes docs/extra-files
+          # Define additional markdown files to include (path within repo)
+          ADDITIONAL_FILES=("additional-documentation.md")  # Define additional files
+      
+          # Create docs/readmes directory and index.md
+          mkdir -p docs/readmes
       
           # Start creating the index.md file with links to each repo page
           echo "# Organization Repositories" > docs/index.md
           echo "Here are the README files and additional markdown files from all repositories in the organization:" >> docs/index.md
           echo "" >> docs/index.md
       
-          # Loop through the repositories and process README + additional markdown files
+          # Loop through the repositories and create a page for each repo
           for REPO in $REPOS; do
-            REPO_FILE="docs/readmes/$REPO.md"
+            REPO_FILE="docs/$REPO.md"  # Create a page for the repository
       
-            # Fetch README.md
+            # Write the README content to the new page
             README_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/README.md"
             echo "# $REPO" > $REPO_FILE
             curl -s $README_URL >> $REPO_FILE
       
-            # Add link to index.md
-            echo "- [$REPO](readmes/$REPO.md)" >> docs/index.md
+            # Add a link to the repository's page in index.md
+            echo "- [$REPO](/$REPO.md)" >> docs/index.md
       
-            # Fetch additional markdown files
-            FILES_URL="https://api.github.com/repos/$ORGANIZATION/$REPO/contents"
-            FILES=$(curl -s $FILES_URL | jq -r '.[] | select(.name | endswith(".md")) | .name')
+            # Loop through additional markdown files
+            for FILE in "${ADDITIONAL_FILES[@]}"; do
+              FILE_NAME=$(basename $FILE)  # Extract filename
+              DEST_FILE="docs/${REPO}_${FILE_NAME}"  # Unique file name in docs
       
-            for FILE in $FILES; do
               FILE_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPO/main/$FILE"
-              FILE_PATH="docs/extra-files/$REPO-$FILE"
+              HTTP_STATUS=$(curl -o /dev/null --silent --head --write-out '%{http_code}\n' $FILE_URL)
       
-              echo "# $FILE from $REPO" > $FILE_PATH
-              curl -s $FILE_URL >> $FILE_PATH
-      
-              # Add link to index.md
-              echo "  - [$FILE from $REPO](extra-files/$REPO-$FILE)" >> docs/index.md
+              if [ "$HTTP_STATUS" -eq 200 ]; then
+                echo "# $REPO - $FILE_NAME" > $DEST_FILE
+                curl -s $FILE_URL >> $DEST_FILE
+                echo "- [$REPO - $FILE_NAME](/${REPO}_${FILE_NAME})" >> docs/index.md
+              fi
             done
           done
 
