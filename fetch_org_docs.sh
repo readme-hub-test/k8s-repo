@@ -39,7 +39,7 @@ for REPO in $REPOS; do
 
   # Add to navigation and index
   README_NAV+="    - $REPO: $REPO.md\n"
-  README_LINKS+="- [$REPO](/$REPO.md)\n"
+  README_LINKS+="- [$REPO]($REPO.md)\n"
 
   # Loop through additional markdown files
   for FILE in "${ADDITIONAL_FILES[@]}"; do
@@ -52,7 +52,7 @@ for REPO in $REPOS; do
     if [ "$HTTP_STATUS" -eq 200 ]; then
       echo "# $REPO - $FILE_NAME" > "$DEST_FILE"
       curl -s "$FILE_URL" >> "$DEST_FILE"
-      ADDITIONAL_FILES_SECTION+="- [$REPO - $FILE_NAME](/${REPO}_${FILE_NAME})\n"
+      ADDITIONAL_FILES_SECTION+="- [$REPO - $FILE_NAME](${REPO}_${FILE_NAME})\n"
       ADDITIONAL_FILES_NAV+="    - $REPO - $FILE_NAME: ${REPO}_${FILE_NAME}\n"
     fi
   done
