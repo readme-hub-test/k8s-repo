@@ -30,7 +30,7 @@ jobs:
           pip install mkdocs mkdocs-material requests jq
 
       - name: Fetch all READMEs and additional docs in the organization
-        run: ./fetch_org_docs.sh readme-hub-test
+        run: bash fetch_org_docs.sh readme-hub-test
 
       - name: Build the MkDocs site
         run: |
