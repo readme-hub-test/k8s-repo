@@ -1,0 +1,6 @@
+additional_docs: # add your additional documentation files as dict as above
+  # repo1:
+  #   - docs/overview.md
+  #   - docs/setup.md
+  # repo2:
+  #   - guide/usage.md
