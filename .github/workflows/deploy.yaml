@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -18,23 +15,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Install MkDocs and dependencies
+      - name: Install dependencies
         run: |
-          pip install mkdocs mkdocs-material requests jq
+          pip install mkdocs mkdocs-material PyYAML requests
 
-      - name: Fetch all READMEs and additional docs in the organization
-        run: bash fetch_org_docs.sh readme-hub-test
+      - name: Fetch documentation from org
+        run: python fetch_docs.py readme-hub-test
 
       - name: Build the MkDocs site
-        run: |
-          mkdocs build
+        run: mkdocs build
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
