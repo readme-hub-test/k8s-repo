@@ -1,4 +1,4 @@
-# documentation for k8s-repo
+# Documentation for k8s-repo
 
 this is the documentation for k8s-repo
 
